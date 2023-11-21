@@ -60,9 +60,7 @@ python main_test.py
 
   - [ ] Correction des prédictions erronées pour la phase de test (Unconditional discounting);
 
-  - [ ] Combinaison des prédictions des classifieurs binaires;
-
-  - [ ] Règle de la maximalité pour avoir la prédiction finale (Maximality rule).
+  - [ ] Règle de la maximalité pour combiner (Maximality rule).
 
 - [ ] Expérimentations sur les jeux de données réels;
 
