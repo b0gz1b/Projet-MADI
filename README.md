@@ -56,11 +56,11 @@ python main_test.py
   
   - [x] 4 schémas de décomposition (OVO, OVA, ECOC dense, ECOC sparse);
   
-  - [ ] Imprécision sur les prédictions (Bayesian credibility interval bounds obtained using a beta prior with parameters aj = bj = 3.5);
-  
-  - [ ] Pruning des arbres de décision (using cross-validation as pruning strategy);
+  - [x] Imprécision sur les prédictions (Bayesian credibility interval bounds obtained using a beta prior with parameters aj = bj = 3.5);
 
   - [ ] Correction des prédictions erronées pour la phase de test (Unconditional discounting);
+
+  - [ ] Combinaison des prédictions des classifieurs binaires;
 
   - [ ] Règle de la maximalité pour avoir la prédiction finale (Maximality rule).
 

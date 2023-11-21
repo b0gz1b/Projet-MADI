@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
+from scipy import stats
 
 def OVA(X,y):
     """
@@ -14,7 +15,7 @@ def OVA(X,y):
         clf = DecisionTreeClassifier()
         clf.fit(X,y_i)
         classifiers.append(clf)
-        decomps.append((set(labels[i]),s_labels-set(labels[i])))
+        decomps.append(({labels[i]},s_labels-{labels[i]}))
     return classifiers, decomps
         
 
@@ -32,7 +33,7 @@ def OVO(X,y):
             clf = DecisionTreeClassifier()
             clf.fit(X_ij,y_ij)
             classifiers.append(clf)
-            decomps.append((set(labels[i]),set(labels[j])))
+            decomps.append(({labels[i]},{labels[j]}))
     return classifiers, decomps
 
 def ECOC_dense(X,y):
@@ -89,3 +90,25 @@ def ECOC_sparse(X,y):
                 b.add(label)
         decomps.append((a,b))
     return classifiers, decomps
+
+def compute_hdi(alpha_prior, beta_prior, x, conf):
+    alpha_post = alpha_prior + x
+    beta_post = beta_prior
+    hdi = stats.beta.ppf([0.5*conf, 1-0.5*conf], alpha_post, beta_post)
+    return hdi
+
+def apply_imprecise(X, classifiers, conf=0.05):
+    """
+    Apply imprecise classification
+    """
+    hdis = np.zeros((len(classifiers),X.shape[0],2))
+    for i in range(len(classifiers)):
+        leaf_ids = classifiers[i].apply(X)
+        for j in range(len(leaf_ids)):
+            k = classifiers[i].tree_.n_node_samples[leaf_ids[j]]
+            hdi = compute_hdi(3.5, 3.5, k, conf)
+            if classifiers[i].tree_.value[leaf_ids[j]][0][0] > 0: # Prediction is -1
+                hdis[i][j] += [1-hdi[1], 1-hdi[0]]
+            else:
+                hdis[i][j] += hdi
+    return hdis
