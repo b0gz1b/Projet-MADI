@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
+import numpy as np
 from utils import generate_multiclass_data
 import decomp
+from correct import unconditional_discounting
 
 # Parameters for each class (mean, std)
 class_parameters = [
@@ -24,3 +26,7 @@ plt.show()
 # Exemple de décomposition
 classifiers, decomps = decomp.ECOC_dense(X,y)
 print(decomps)
+
+# alpha = np.array([[0,0.6,0.6,0],[0,0,0.6,0.6],[0,0,0,0.6],[0]*4])
+# beta = np.array([[0,1,1,0,4],[0,0,1,1],[0,0,0,1],[0]*4])
+# correct.unconditional_discounting(alpha, beta, 4)
