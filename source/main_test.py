@@ -1,10 +1,12 @@
 import matplotlib.pyplot as plt
+import numpy as np
 from utils import generate_multiclass_data
 import decomp
 from sklearn.model_selection import train_test_split
 from sklearn import tree
 from scipy import stats
 import numpy as np
+from correct import unconditional_discounting
 
 np.random.seed(42)
 
@@ -33,3 +35,9 @@ C = decomp.apply_imprecise(X_test, classifiers, conf=0.05)
 
 # Intervalles du classifieur 0
 print(C[0])
+
+
+decomp = [({0}, {1}), ({0}, {2}), ({0}, {3}), ({1}, {2}), ({1}, {3}), ({2}, {3})]
+alpha = [0.6,0.6,0,0.6,0.6,0.6]
+beta = [1,1,0.4,1,1,1]
+unconditional_discounting(decomp, alpha, beta)
