@@ -37,7 +37,4 @@ C = decomp.apply_imprecise(X_test, classifiers, conf=0.05)
 print(C[0])
 
 
-decomp = [({0}, {1}), ({0}, {2}), ({0}, {3}), ({1}, {2}), ({1}, {3}), ({2}, {3})]
-alpha = [0.6,0.6,0,0.6,0.6,0.6]
-beta = [1,1,0.4,1,1,1]
-unconditional_discounting(decomp, alpha, beta)
+
