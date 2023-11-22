@@ -16,17 +16,17 @@ def unconditional_discounting(decomp, K, Alpha, Beta):
             A_ub[i,j] = -1 * Alpha[j]
             for k in range(K):
                 if k in decomp[j][0]:
-                    A_ub[i,J+k] = Alpha[j]
-                elif k in decomp[j][1]:
                     A_ub[i,J+k] = Alpha[j] - 1
+                elif k in decomp[j][1]:
+                    A_ub[i,J+k] = Alpha[j] 
         elif i < 2*J: # Contraintes 19
             j = i - J
             A_ub[i,j] = Beta[j] - 1
             for k in range(K):
                 if k in decomp[j][0]:
-                    A_ub[i,J+k] = -1 * Beta[j]
-                elif k in decomp[j][1]:
                     A_ub[i,J+k] = 1 - Beta[j]
+                elif k in decomp[j][1]:
+                    A_ub[i,J+k] = -1 * Beta[j]
         elif i < 3*J: # Contraintes 21 (sur les epsilon)
             j = i - 2*J
             A_ub[i,j] = -1
