@@ -102,13 +102,14 @@ def apply_imprecise(X, classifiers, conf=0.05):
     Apply imprecise classification
     """
     hdis = np.zeros((len(classifiers),X.shape[0],2))
+    ks = np.zeros((len(classifiers),X.shape[0]))
     for i in range(len(classifiers)):
         leaf_ids = classifiers[i].apply(X)
+        y_hat = classifiers[i].predict(X)
         for j in range(len(leaf_ids)):
             k = classifiers[i].tree_.n_node_samples[leaf_ids[j]]
             hdi = compute_hdi(3.5, 3.5, k, conf)
-            if classifiers[i].tree_.value[leaf_ids[j]][0][0] > 0: # Prediction is -1
-                hdis[i][j] += [1-hdi[1], 1-hdi[0]]
-            else:
-                hdis[i][j] += hdi
-    return hdis
+            # si on a prédit la classe négative, on inverse l'intervalle de confiance
+            hdis[i,j] = hdi if y_hat[j] == 1 else 1-hdi[::-1]
+            ks[i,j] = k
+    return hdis, ks

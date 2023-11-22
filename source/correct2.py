@@ -27,17 +27,17 @@ def unconditional_discounting(decomp, K, Alpha, Beta):
                     A_ub[i,J+k] = -1 * Beta[j]
                 elif k in decomp[j][1]:
                     A_ub[i,J+k] = 1 - Beta[j]
-        elif i < 3*J: # Contraintes 20 (sur les epsilon)
+        elif i < 3*J: # Contraintes 21 (sur les epsilon)
             j = i - 2*J
             A_ub[i,j] = -1
-        elif i < 4*J: # Contraintes 20 (sur les epsilon)
+        elif i < 4*J: # Contraintes 21 (sur les epsilon)
             j = i - 3*J
             A_ub[i,j] = 1
             b_ub[i] = 1
-        elif i < 4*J+K: # Contraintes 20 (sur les p)
+        elif i < 4*J+K: # Contraintes 21 (sur les p)
             k = i - 4*J
             A_ub[i,J+k] = -1
-        elif i < 4*J+2*K: # Contraintes 20 (sur les p)
+        elif i < 4*J+2*K: # Contraintes 21 (sur les p)
             k = i - 4*J - K
             A_ub[i,J+k] = 1
             b_ub[i] = 1
@@ -45,10 +45,11 @@ def unconditional_discounting(decomp, K, Alpha, Beta):
     return res.x[:J]
 
 
-decomp = [({0}, {1}), ({0}, {2}), ({0}, {3}), ({1}, {2}), ({1}, {3}), ({2}, {3})]
-alpha = [0.6,0.6,0,0.6,0.6,0.6]
-beta = [1,1,0.4,1,1,1]
-epsilons = unconditional_discounting(decomp, 4, alpha, beta)
+if __name__ == "__main__":
+    decomp = [({0}, {1}), ({0}, {2}), ({0}, {3}), ({1}, {2}), ({1}, {3}), ({2}, {3})]
+    alpha = [0.6,0.6,0,0.6,0.6,0.6]
+    beta = [1,1,0.4,1,1,1]
+    epsilons = unconditional_discounting(decomp, 4, alpha, beta)
 
-for i in range(len(decomp)):
-    print("Classifer {} vs {} : [{};{}] eps = {}".format(decomp[i][0], decomp[i][1], alpha[i], beta[i], epsilons[i]))
+    for i in range(len(decomp)):
+        print("Classifer {} vs {} : [{};{}] eps = {}".format(decomp[i][0], decomp[i][1], alpha[i], beta[i], epsilons[i]))

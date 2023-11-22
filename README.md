@@ -58,7 +58,7 @@ python main_test.py
   
   - [x] Imprécision sur les prédictions (Bayesian credibility interval bounds obtained using a beta prior with parameters aj = bj = 3.5);
 
-  - [ ] Correction des prédictions erronées pour la phase de test (Unconditional discounting);
+  - [x] Correction des prédictions erronées pour la phase de test (Unconditional discounting);
 
   - [ ] Règle de la maximalité pour combiner (Maximality rule).
 
