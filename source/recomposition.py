@@ -60,3 +60,14 @@ if __name__ == "__main__":
                     print("Class {} is discarded".format(class2))
                     all_classes = all_classes - {class2}
     print("Remaining classes : {}".format(all_classes))
+
+    all_classes = set(range(4))
+    for class1 in range(4):
+        for class2 in range(4):
+            if class1 != class2:
+                rec = recompose(decomp, 4, alpha, beta, [0,0,1/3,0,0,0], class1, class2)
+                print("Recomposition {} vs {} : {}".format(class1, class2, rec))
+                if rec > 0:
+                    print("Class {} is discarded".format(class2))
+                    all_classes = all_classes - {class2}
+    print("Remaining classes : {}".format(all_classes))
