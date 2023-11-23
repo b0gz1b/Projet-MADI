@@ -2,7 +2,7 @@ import numpy as np
 from scipy.stats import chi2
 import matplotlib.pyplot as plt
 from matplotlib import patches
-from typing import List
+from typing import Dict, List, Tuple
 
 def generate_multiclass_data(num_samples, class_parameters):
     data = []
@@ -62,7 +62,8 @@ def synthetic_datasets_generation(p: int,
                                   shape_of_population: str,
                                   population_sizes: List[int],
                                   variability: str,
-                                  q: int) -> np.ndarray:
+                                  q: int,
+                                  eigv_large: float=1.0) -> Tuple[np.ndarray, np.ndarray, Dict]:
     """
     Generate synthetic datasets
     :param number_of_features: Number of features
@@ -71,33 +72,18 @@ def synthetic_datasets_generation(p: int,
     :param population_sizes: Sizes of the sub-populations
     :param variability: Variability of the population, either "ho" or "he", for homoscedastic or heteroscedastic respectively
     :param q: Quantile of the Chi squared distribution with p degrees of freedom
-    :return: Synthetic dataset
+    :param eigv_large: Largest eigenvalue of the covariance matrix
+    :return: Synthetic dataset with the corresponding labels. Also returns the distributions used to generate the dataset
     """
     if number_of_labels > 2**p:
         raise ValueError("number_of_labels must be less than 2**p where p is the number of features")
-    
-    # covariance matrix
-    # if shape_of_population == "sphere":
-    #     if variability == "ho":
-    #         cov = np.eye(p)
-    #     elif variability == "he":
-    #         cov = [(np.random.random()) * np.eye(p) for _ in range(number_of_labels)]
-    #     else:
-    #         raise ValueError("variability must be either 'ho' or 'he'")
-    # elif shape_of_population == "ellipse":
-    #     if variability == "ho":
-    #         cov = random_positive_semi_definite_matrix(p)
-    #     elif variability == "he":
-    #         cov = [random_positive_semi_definite_matrix(p) for _ in range(number_of_labels)]
-    #     else:
-    #         raise ValueError("variability must be either 'ho' or 'he'")
-    # else:
-    #     raise ValueError("shape_of_population must be either 'sphere' or 'ellipse'")
+    if q < 0 or q > 1:
+        raise ValueError("q must be strictly between 0 and 1")
 
     if variability == "ho":
-        cov = g_covariance(p, sphere=True if shape_of_population=="sphere" else False, eigv_large=1.0)
+        cov = g_covariance(p, sphere=True if shape_of_population=="sphere" else False, eigv_large=eigv_large)
     elif variability == "he":
-        cov = [g_covariance(p, sphere=True if shape_of_population=="sphere" else False, eigv_large=1.0) for _ in range(number_of_labels)]
+        cov = [g_covariance(p, sphere=True if shape_of_population=="sphere" else False, eigv_large=eigv_large) for _ in range(number_of_labels)]
     
     dataset = np.zeros((np.sum(population_sizes), p))
     y = np.concatenate([np.full((population_sizes[i], 1), i) for i in range(number_of_labels)])
@@ -132,22 +118,9 @@ def synthetic_datasets_generation(p: int,
 
     return dataset, y.flatten(), distributions
 
-if __name__ == "__main__":
-    np.random.seed(0)
-    # Parameters
-    p = 2
-    number_of_labels = 4
-    shape_of_population = "ellipse"
-    population_sizes = [40] * number_of_labels
-    variability = "he"
-    q = 0.65
-
-    # Generate synthetic dataset
-    dataset, y, distributions = synthetic_datasets_generation(p, number_of_labels, shape_of_population, population_sizes, variability, q)
-    # Plot the dataset
+def plot_2d_synthetic(dataset, y, distributions):
     fig, ax = plt.subplots()
-    for i in range(number_of_labels):
-        # plot the points of the class i
+    for i in range(len(distributions)):
         ax.scatter(dataset[y==i,0], dataset[y==i,1], label="Class {}".format(i))
         v, vec = distributions[i][1]["eigvals"], distributions[i][1]["eigvectors"]
         angle = np.arctan2(vec[1, 0], vec[0, 0])
@@ -156,10 +129,61 @@ if __name__ == "__main__":
         ax.add_patch(c)
         c = patches.Ellipse((distributions[i][0][0], distributions[i][0][1]), 4 * std_devs[0], 4 * std_devs[1], angle=np.degrees(angle), fill=False, color="black", linestyle="dotted")
         ax.add_patch(c)
-        
     ax.set_aspect('equal', 'box')
-    plt.title('Dataset')
-    plt.xlabel('X-axis')
-    plt.ylabel('Y-axis')
+    plt.title('Synthetic dataset')
+    plt.xlabel('Feature 1')
+    plt.ylabel('Feature 2')
     plt.legend()
     plt.show()
+
+def plot_3d_synthetic(dataset, y, distributions):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    for i in range(len(distributions)):
+        ax.scatter(dataset[y==i,0], dataset[y==i,1], dataset[y==i,2], label="Class {}".format(i))
+    ax.set_aspect('equal', 'box')
+    plt.title('Synthetic dataset')
+    plt.xlabel('Feature 1')
+    plt.ylabel('Feature 2')
+    ax.set_zlabel('Feature 3')
+    plt.legend()
+    plt.show()
+
+def discounted_accuracy(Y_set_pred, y_test, alpha_discount) -> float:
+    """
+    Compute the discounted accuracy of the classifier
+    :param X_test: Test data
+    :param y_test: Test labels
+    :param alpha_discount: Discount factor
+    :return: Discounted accuracy
+    """
+    discounted_accurracies = [(alpha_discount / len(Y_set_pred[i])) - ((alpha_discount - 1) / len(Y_set_pred[i])**2) if y_test[i] in Y_set_pred[i] else 0 for i in range(len(y_test))]
+    return np.mean(discounted_accurracies), np.std(discounted_accurracies)
+
+def set_accuracy(Y_set_pred, y_test) -> float:
+    """
+    Compute the set accuracy of the classifier
+    :param X_test: Test data
+    :param y_test: Test labels
+    :return: Set accuracy
+    """
+    set_accurracies = [1 if y_test[i] in Y_set_pred[i] else 0 for i in range(len(y_test))]
+    return np.mean(set_accurracies), np.std(set_accurracies)
+
+if __name__ == "__main__":
+    np.random.seed(0)
+    # Parameters
+    p = 2
+    number_of_labels = 4
+    shape_of_population = "ellipse"
+    population_sizes = [40] * number_of_labels
+    variability = "he"
+    q = 0.75
+
+    # Generate synthetic dataset
+    dataset, y, distributions = synthetic_datasets_generation(p, number_of_labels, shape_of_population, population_sizes, variability, q)
+    # Plot the dataset
+    if p==2:
+        plot_2d_synthetic(dataset, y, distributions)
+    elif p==3:
+        plot_3d_synthetic(dataset, y, distributions)

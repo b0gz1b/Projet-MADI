@@ -91,9 +91,9 @@ def ECOC_sparse(X,y):
         decomps.append((a,b))
     return classifiers, decomps
 
-def compute_hdi(alpha_prior, beta_prior, x, conf):
+def compute_hdi(alpha_prior, beta_prior, n, x, conf):
     alpha_post = alpha_prior + x
-    beta_post = beta_prior
+    beta_post = beta_prior + n - x
     hdi = stats.beta.ppf([0.5*conf, 1-0.5*conf], alpha_post, beta_post)
     return hdi
 
@@ -106,8 +106,9 @@ def apply_imprecise(X, classifiers, conf=0.05):
         leaf_ids = classifiers[i].apply(X)
         y_hat = classifiers[i].predict(X)
         for j in range(len(leaf_ids)):
-            k = classifiers[i].tree_.n_node_samples[leaf_ids[j]]
-            hdi = compute_hdi(3.5, 3.5, k, conf)
+            k = classifiers[i].tree_.value[leaf_ids[j], 0, max(0,int(y_hat[j]))]
+            n = classifiers[i].tree_.value[0, 0, max(0,int(y_hat[j]))]
+            hdi = compute_hdi(3.5, 3.5, k, k, conf) # For now we give both times k for the posterior update
             # si on a prédit la classe négative, on inverse l'intervalle de confiance
             hdis[j,i] = hdi if y_hat[j] == 1 else 1-hdi[::-1]
     return hdis

@@ -47,14 +47,3 @@ class DecompRecompImpreciseCART:
                         Y_set_pred[i] = Y_set_pred[i] - {class_2}
         return Y_set_pred
     
-    def discounted_accuracy(self, Y_set_pred, y_test, alpha_discount) -> float:
-        """
-        Compute the discounted accuracy of the classifier
-        :param X_test: Test data
-        :param y_test: Test labels
-        :param alpha_discount: Discount factor
-        :return: Discounted accuracy
-        """
-        discounted_accurracies = [(alpha_discount / len(Y_set_pred[i])) - ((alpha_discount - 1) / len(Y_set_pred[i])**2) if y_test[i] in Y_set_pred[i] else 0 for i in range(len(y_test))]
-        return np.mean(discounted_accurracies), np.std(discounted_accurracies)
-    
