@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.stats import chi2
 import matplotlib.pyplot as plt
+from matplotlib import patches
+from typing import List
 
 def generate_multiclass_data(num_samples, class_parameters):
     data = []
@@ -29,6 +31,23 @@ def random_positive_semi_definite_matrix(p: int) -> np.ndarray:
     B = np.dot(A, A.transpose())
     return B
 
+def g_covariance(p, sphere=True, eigv_large=1.0):
+    # Generate a random matrix and perform QR decomposition
+    random_matrix = np.random.normal(size=(p, p))
+    Q, _ = np.linalg.qr(random_matrix)
+
+    # Generate eigenvalues based on the specified conditions
+    if sphere:
+        eigvalues = np.full(p, np.random.uniform(0, eigv_large))
+    else:
+        eigvalues = np.sort(np.random.uniform(0, eigv_large, p))[::-1]
+
+    # Calculate the covariance matrix Sigma
+    H = Q * np.sqrt(eigvalues)
+    Sigma = np.dot(H, H.T)
+    eigvectors = np.linalg.eig(Sigma)[1]
+    return {'eigvals': eigvalues, 'eigvectors': eigvectors,'Sigma': Sigma}
+
 def generate_binary_vectors(p):
     # Generate all possible combinations of {-1, 1} for a given length p
     binary_vectors = np.array(list(np.ndindex((2,) * p)))
@@ -41,7 +60,7 @@ def generate_binary_vectors(p):
 def synthetic_datasets_generation(p: int, 
                                   number_of_labels: int, 
                                   shape_of_population: str,
-                                  population_sizes: list[int],
+                                  population_sizes: List[int],
                                   variability: str,
                                   q: int) -> np.ndarray:
     """
@@ -54,23 +73,31 @@ def synthetic_datasets_generation(p: int,
     :param q: Quantile of the Chi squared distribution with p degrees of freedom
     :return: Synthetic dataset
     """
+    if number_of_labels > 2**p:
+        raise ValueError("number_of_labels must be less than 2**p where p is the number of features")
+    
     # covariance matrix
-    if shape_of_population == "sphere":
-        if variability == "ho":
-            cov = np.eye(p)
-        elif variability == "he":
-            cov = [(2*np.random.random()) * np.eye(p) for _ in range(number_of_labels)]
-        else:
-            raise ValueError("variability must be either 'ho' or 'he'")
-    elif shape_of_population == "ellipse":
-        if variability == "ho":
-            cov = random_positive_semi_definite_matrix(p)
-        elif variability == "he":
-            cov = [random_positive_semi_definite_matrix(p) for _ in range(number_of_labels)]
-        else:
-            raise ValueError("variability must be either 'ho' or 'he'")
-    else:
-        raise ValueError("shape_of_population must be either 'sphere' or 'ellipse'")
+    # if shape_of_population == "sphere":
+    #     if variability == "ho":
+    #         cov = np.eye(p)
+    #     elif variability == "he":
+    #         cov = [(np.random.random()) * np.eye(p) for _ in range(number_of_labels)]
+    #     else:
+    #         raise ValueError("variability must be either 'ho' or 'he'")
+    # elif shape_of_population == "ellipse":
+    #     if variability == "ho":
+    #         cov = random_positive_semi_definite_matrix(p)
+    #     elif variability == "he":
+    #         cov = [random_positive_semi_definite_matrix(p) for _ in range(number_of_labels)]
+    #     else:
+    #         raise ValueError("variability must be either 'ho' or 'he'")
+    # else:
+    #     raise ValueError("shape_of_population must be either 'sphere' or 'ellipse'")
+
+    if variability == "ho":
+        cov = g_covariance(p, sphere=True if shape_of_population=="sphere" else False, eigv_large=1.0)
+    elif variability == "he":
+        cov = [g_covariance(p, sphere=True if shape_of_population=="sphere" else False, eigv_large=1.0) for _ in range(number_of_labels)]
     
     dataset = np.zeros((np.sum(population_sizes), p))
     y = np.concatenate([np.full((population_sizes[i], 1), i) for i in range(number_of_labels)])
@@ -78,9 +105,11 @@ def synthetic_datasets_generation(p: int,
     # Root sub-population
     mu_mr = np.zeros(p)
     if variability == "ho":
-        dataset[0:population_sizes[0]] = np.random.multivariate_normal(mu_mr, cov, size=population_sizes[0])
+        dataset[0:population_sizes[0]] = np.random.multivariate_normal(mu_mr, cov["Sigma"], size=population_sizes[0])
+        distributions.append((mu_mr, cov))
     elif variability == "he":
-        dataset[0:population_sizes[0]] = np.random.multivariate_normal(mu_mr, cov[0], size=population_sizes[0])
+        dataset[0:population_sizes[0]] = np.random.multivariate_normal(mu_mr, cov[0]["Sigma"], size=population_sizes[0])
+        distributions.append((mu_mr, cov[0]))
     
     # generate the delta coefficients
     vectors = generate_binary_vectors(p)
@@ -89,17 +118,17 @@ def synthetic_datasets_generation(p: int,
     # Other sub-populations
     for i in range(1, number_of_labels):
         if variability == "ho":
-            delta = 2 * np.sqrt(np.linalg.eig(cov)[0] * chi2.ppf(q, p))
+            delta = 2 * np.sqrt(cov["eigvals"] * chi2.ppf(q, p))
             dist = omegas[i] * delta
             distributions.append((mu_mr + dist, cov))
-            dataset[sum(population_sizes[:i]):sum(population_sizes[:i])+population_sizes[i]] = np.random.multivariate_normal(mu_mr + dist, cov, size=population_sizes[i])
+            dataset[sum(population_sizes[:i]):sum(population_sizes[:i])+population_sizes[i]] = np.random.multivariate_normal(mu_mr + dist, cov["Sigma"], size=population_sizes[i])
         elif variability == "he":
-            a1 = 0.8 * np.sqrt(np.linalg.eig(cov[0])[0] * chi2.ppf(q, p))
-            a2 = 0.8 * np.sqrt(np.linalg.eig(cov[i])[0] * chi2.ppf(q, p))
+            a1 = 0.8 * np.sqrt(cov[0]["eigvals"] * chi2.ppf(q, p))
+            a2 = 0.8 * np.sqrt(cov[1]["eigvals"] * chi2.ppf(q, p))
             delta = a1 + a2
             dist = omegas[i] * delta
-            distributions.append((mu_mr + dist, cov))
-            dataset[sum(population_sizes[:i]):sum(population_sizes[:i])+population_sizes[i]] = np.random.multivariate_normal(mu_mr + dist, cov[i], size=population_sizes[i])
+            distributions.append((mu_mr + dist, cov[i]))
+            dataset[sum(population_sizes[:i]):sum(population_sizes[:i])+population_sizes[i]] = np.random.multivariate_normal(mu_mr + dist, cov[i]["Sigma"], size=population_sizes[i])
 
     return dataset, y.flatten(), distributions
 
@@ -107,18 +136,30 @@ if __name__ == "__main__":
     np.random.seed(0)
     # Parameters
     p = 2
-    number_of_labels = 3
-    shape_of_population = "sphere"
-    population_sizes = [40, 40, 40]
-    variability = "ho"
-    q = 0.80
+    number_of_labels = 4
+    shape_of_population = "ellipse"
+    population_sizes = [40] * number_of_labels
+    variability = "he"
+    q = 0.65
 
     # Generate synthetic dataset
     dataset, y, distributions = synthetic_datasets_generation(p, number_of_labels, shape_of_population, population_sizes, variability, q)
     # Plot the dataset
-    plt.figure()
+    fig, ax = plt.subplots()
     for i in range(number_of_labels):
-        plt.scatter(dataset[y==i,0], dataset[y==i,1], label="Classe {}".format(i))
+        # plot the points of the class i
+        ax.scatter(dataset[y==i,0], dataset[y==i,1], label="Class {}".format(i))
+        v, vec = distributions[i][1]["eigvals"], distributions[i][1]["eigvectors"]
+        angle = np.arctan2(vec[1, 0], vec[0, 0])
+        std_devs = np.sqrt(v[0]), np.sqrt(v[1])
+        c = patches.Ellipse((distributions[i][0][0], distributions[i][0][1]), 2 * std_devs[0], 2 * std_devs[1], angle=np.degrees(angle), fill=False, color="black", linestyle="dashed")
+        ax.add_patch(c)
+        c = patches.Ellipse((distributions[i][0][0], distributions[i][0][1]), 4 * std_devs[0], 4 * std_devs[1], angle=np.degrees(angle), fill=False, color="black", linestyle="dotted")
+        ax.add_patch(c)
+        
+    ax.set_aspect('equal', 'box')
+    plt.title('Dataset')
+    plt.xlabel('X-axis')
+    plt.ylabel('Y-axis')
     plt.legend()
-
     plt.show()
