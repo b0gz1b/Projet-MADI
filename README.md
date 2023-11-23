@@ -60,7 +60,7 @@ python main_test.py
 
   - [x] Correction des prédictions erronées pour la phase de test (Unconditional discounting);
 
-  - [ ] Règle de la maximalité pour combiner (Maximality rule).
+  - [x] Règle de la maximalité pour combiner (Maximality rule).
 
 - [ ] Expérimentations sur les jeux de données réels;
 

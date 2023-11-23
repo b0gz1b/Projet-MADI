@@ -1,13 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from utils import generate_multiclass_data
-import decomposition
 from sklearn.model_selection import train_test_split
-from sklearn import tree
-from scipy import stats
-import numpy as np
-from correct2 import unconditional_discounting
-from recomposition import recompose
+from impclassifier import DecompRecompImpreciseCART
+
 
 np.random.seed(42)
 
@@ -20,28 +16,24 @@ class_parameters = [
 ]
 K = 4
 # Génération de données synthétiques multiclasse
-num_samples_per_class = 100
+num_samples_per_class = 50
 X, y = generate_multiclass_data(num_samples_per_class, class_parameters)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=0)
-x0 = 20
 # Affichage graphique des données multiclasse avec des points pour les données d'entraînement et des croix pour les données de test, de la même couleur ! pour chaque classe, légendé
 plt.figure()
 for i in range(len(class_parameters)):
     plt.scatter(X_train[y_train==i,0], X_train[y_train==i,1], label="Classe {}".format(i))
     plt.scatter(X_test[y_test==i,0], X_test[y_test==i,1], marker="x", color="C{}".format(i))
-# on ajoute juste un label sur le point x0 sans rien ajouter d'autre
-plt.scatter(X_test[x0,0], X_test[x0,1], marker="x", color="black", label="Point x0")
 plt.legend()
 plt.show()
-# Exemple de décomposition
-classifiers, decomps = decomposition.OVO(X_train,y_train)
 
-C, ks = decomposition.apply_imprecise(X_test, classifiers, conf=0.05)
-print("Point {} : {} classe = {}".format(x0, X_test[x0], y_test[x0]))
-for i in range(len(C)):
-    # alpha in first column, beta in second column
-    epsilons = unconditional_discounting(decomps, K, Alpha=C[i,::,0], Beta=C[i,::,1])
-    print("Point {}, Classifier {} vs {} : [{};{}] eps = {} y hat = {} dens = {}".format(x0, decomps[i][0], decomps[i][1], C[i,x0,0], C[i,x0,1], epsilons[i], classifiers[i].predict(X_test[x0][np.newaxis]), ks[i,x0]))
+cl = DecompRecompImpreciseCART(K=K, decompostion_scheme="OVA", confidence=0.05)
 
+cl.fit(X_train, y_train)
 
+Y_set_pred = cl.predict(X_test)
 
+u65, s65 = cl.discounted_accuracy(Y_set_pred, y_test, alpha_discount=1.65)
+u80, s80 = cl.discounted_accuracy(Y_set_pred, y_test, alpha_discount=2.2)
+print(f"Discounted accuracy u65 : {u65:.2f}±{s65:.2f}")
+print(f"Discounted accuracy u80 : {u80:.2f}±{s80:.2f}")
