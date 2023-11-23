@@ -3,6 +3,8 @@ from utils import synthetic_datasets_generation, plot_2d_synthetic, plot_3d_synt
 from sklearn.model_selection import train_test_split
 from impclassifier import DecompRecompImpreciseCART
 from sklearn.tree import DecisionTreeClassifier
+from ucimlrepo import fetch_ucirepo 
+import itertools
 
 np.random.seed(0)
 
@@ -86,3 +88,40 @@ mean_sa, std_sa = set_accuracy(Y_set_pred, y_test)
 print(f"Discounted accuracy u65 : {u65:.2f}±{s65:.2f}")
 print(f"Discounted accuracy u80 : {u80:.2f}±{s80:.2f}")
 print(f"Set accuracy : {mean_sa:.2f}±{std_sa:.2f}")
+
+
+
+
+
+
+# Handwritten Digits
+# fetch dataset 
+optical_recognition_of_handwritten_digits = fetch_ucirepo(id=80) 
+  
+# data (as pandas dataframes) 
+X = optical_recognition_of_handwritten_digits.data.features 
+y = optical_recognition_of_handwritten_digits.data.targets 
+  
+# metadata 
+metadata = optical_recognition_of_handwritten_digits.metadata
+  
+# variable information 
+print(optical_recognition_of_handwritten_digits.variables) 
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=100)
+X_train, X_test, y_train, y_test = X_train.values.tolist(), X_test.values.tolist(), list(itertools.chain.from_iterable(y_train.values.tolist())), list(itertools.chain.from_iterable(y_test.values.tolist()))
+X_train, X_test, y_train, y_test = np.array(X_train), np.array(X_test), np.array(y_train), np.array(y_test)
+
+for decomp_strat in ["OVA", "OVO", "ECOC_dense", "ECOC_sparse"]:
+
+    print(decomp_strat+"\n")
+    cl=DecompRecompImpreciseCART(K=10, decompostion_scheme=decomp_strat, confidence=0.05)
+    cl.fit(X_train, y_train)
+
+    Y_set_pred = cl.predict(X_test)
+    u65, s65 = cl.discounted_accuracy(Y_set_pred, y_test, alpha_discount=1.65)
+    u80, s80 = cl.discounted_accuracy(Y_set_pred, y_test, alpha_discount=2.2)
+    sa, err_sa = cl.set_accuracy(Y_set_pred, y_test)
+    print(f"Discounted accuracy u65 : {u65:.2f}±{s65:.2f}")
+    print(f"Discounted accuracy u80 : {u80:.2f}±{s80:.2f}")
+    print(f"Set accuracy u80 : {sa:.2f}±{err_sa:.2f}")
