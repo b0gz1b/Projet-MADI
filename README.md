@@ -42,17 +42,17 @@ pip install matplotlib
 
 ## Usage
 
-Simply run the main_test.py file for now:
+To rerun the experiments, you can simply execute the experiment_digits.py file :
 
 ```bash
-python main_test.py
+python source/experiment_digits.py
 ```
 
 ## Todo
 
 - [x] Génération de jeux de données synthétiques représentable graphiquement;
 
-- [ ] Implémentation de la classification prudente de l'article [1] :
+- [x] Implémentation de la classification prudente de l'article [1] :
   
   - [x] 4 schémas de décomposition (OVO, OVA, ECOC dense, ECOC sparse);
   
@@ -62,7 +62,9 @@ python main_test.py
 
   - [x] Règle de la maximalité pour combiner (Maximality rule).
 
-- [ ] Expérimentations sur les jeux de données réels;
+- [x] Expérimentations sur les jeux de données synthétiques;
+
+- [x] Expérimentations sur les jeux de données réels;
 
 - [ ] Rapport :
   
@@ -70,7 +72,9 @@ python main_test.py
   
   - [ ] Une illustration de la mise en oeuvre du classifieur sur des jeux de données synthétiques;
 
-  - [ ] Analyse des résultats expérimentaux sur les jeux de données retenus.
+  - [ ] Analyse des résultats expérimentaux sur les jeux de données retenus;
+  
+  - [ ] Analyse de la pertinence de la classification prudente par rapport aux type de données.
 
 ## References
 

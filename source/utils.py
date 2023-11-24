@@ -48,14 +48,21 @@ def g_covariance(p, sphere=True, eigv_large=1.0):
     eigvectors = np.linalg.eig(Sigma)[1]
     return {'eigvals': eigvalues, 'eigvectors': eigvectors,'Sigma': Sigma}
 
-def generate_binary_vectors(p):
-    # Generate all possible combinations of {-1, 1} for a given length p
-    binary_vectors = np.array(list(np.ndindex((2,) * p)))
+def generate_unique_random_arrays(n, m):
+    random_arrays = np.empty((n, m), dtype=int)
 
-    # Convert 0 to -1 in the binary vectors
-    binary_vectors[binary_vectors == 0] = -1
+    for i in range(n):
+        while True:
+            # Generate a random array of size m with values -1 or +1
+            random_array = np.random.choice([-1, 1], size=m)
 
-    return binary_vectors
+            # Check if the array is unique
+            if not np.any(np.all(random_array == random_arrays[:i], axis=1)):
+                break  # Exit the loop if the array is unique
+
+        random_arrays[i] = random_array
+
+    return random_arrays
 
 def synthetic_datasets_generation(p: int, 
                                   number_of_labels: int, 
@@ -98,8 +105,7 @@ def synthetic_datasets_generation(p: int,
         distributions.append((mu_mr, cov[0]))
     
     # generate the delta coefficients
-    vectors = generate_binary_vectors(p)
-    omegas = vectors[np.random.choice(len(vectors), size=number_of_labels, replace=False)]
+    omegas = generate_unique_random_arrays(number_of_labels, p)
 
     # Other sub-populations
     for i in range(1, number_of_labels):
@@ -169,6 +175,21 @@ def set_accuracy(Y_set_pred, y_test) -> float:
     """
     set_accurracies = [1 if y_test[i] in Y_set_pred[i] else 0 for i in range(len(y_test))]
     return np.mean(set_accurracies), np.std(set_accurracies)
+
+def experiment_results(Y, y, verbose=True):
+    u65, s65 = discounted_accuracy(Y, y, alpha_discount=1.65)
+    u80, s80 = discounted_accuracy(Y, y, alpha_discount=2.2)
+    u0, s0 = discounted_accuracy(Y, y, alpha_discount=1)
+    sa, err_sa = set_accuracy(Y, y)
+    mean_pred_size = np.mean([len(Y[i]) for i in range(len(Y))])
+    std_pred_size = np.std([len(Y[i]) for i in range(len(Y))])
+    if verbose:
+        print(f"Predicted set size : {mean_pred_size:.2f}±{std_pred_size:.2f}")
+        print(f"Discounted accuracy u65 : {u65:.2f}±{s65:.2f}")
+        print(f"Discounted accuracy u80 : {u80:.2f}±{s80:.2f}")
+        print(f"Weak accuracy: {u0:.2f}±{s0:.2f}")
+        print(f"Set accuracy : {sa:.2f}±{err_sa:.2f}")
+    return {'size': (mean_pred_size, std_pred_size), 'u65': (u65, s65), 'u80': (u80, s80), 'sa': (sa, err_sa)}
 
 if __name__ == "__main__":
     np.random.seed(0)
