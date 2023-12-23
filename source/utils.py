@@ -80,6 +80,7 @@ def synthetic_datasets_generation(p: int,
     :param variability: Variability of the population, either "ho" or "he", for homoscedastic or heteroscedastic respectively
     :param q: Quantile of the Chi squared distribution with p degrees of freedom
     :param eigv_large: Largest eigenvalue of the covariance matrix
+    
     :return: Synthetic dataset with the corresponding labels. Also returns the distributions used to generate the dataset
     """
     if number_of_labels > 2**p:
@@ -124,7 +125,7 @@ def synthetic_datasets_generation(p: int,
 
     return dataset, y.flatten(), distributions
 
-def plot_2d_synthetic(dataset, y, distributions):
+def plot_2d_synthetic(dataset, y, distributions, title=None, file_path=None):
     fig, ax = plt.subplots()
     for i in range(len(distributions)):
         ax.scatter(dataset[y==i,0], dataset[y==i,1], label="Class {}".format(i))
@@ -136,23 +137,33 @@ def plot_2d_synthetic(dataset, y, distributions):
         c = patches.Ellipse((distributions[i][0][0], distributions[i][0][1]), 4 * std_devs[0], 4 * std_devs[1], angle=np.degrees(angle), fill=False, color="black", linestyle="dotted")
         ax.add_patch(c)
     ax.set_aspect('equal', 'box')
-    plt.title('Synthetic dataset')
+    if title is not None:
+        plt.title(title)
+    else:
+        plt.title('Synthetic dataset')
     plt.xlabel('Feature 1')
     plt.ylabel('Feature 2')
     plt.legend()
+    if file_path is not None:
+        plt.savefig(file_path)
     plt.show()
 
-def plot_3d_synthetic(dataset, y, distributions):
+def plot_3d_synthetic(dataset, y, distributions, title=None, file_path=None):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     for i in range(len(distributions)):
         ax.scatter(dataset[y==i,0], dataset[y==i,1], dataset[y==i,2], label="Class {}".format(i))
     ax.set_aspect('equal', 'box')
-    plt.title('Synthetic dataset')
+    if title is not None:
+        plt.title(title)
+    else:
+        plt.title('Synthetic dataset')
     plt.xlabel('Feature 1')
     plt.ylabel('Feature 2')
     ax.set_zlabel('Feature 3')
     plt.legend()
+    if file_path is not None:
+        plt.savefig(file_path)
     plt.show()
 
 def discounted_accuracy(Y_set_pred, y_test, alpha_discount) -> float:
@@ -189,7 +200,7 @@ def experiment_results(Y, y, verbose=True):
         print(f"Discounted accuracy u80 : {u80:.2f}±{s80:.2f}")
         print(f"Weak accuracy: {u0:.2f}±{s0:.2f}")
         print(f"Set accuracy : {sa:.2f}±{err_sa:.2f}")
-    return {'size': (mean_pred_size, std_pred_size), 'u65': (u65, s65), 'u80': (u80, s80), 'sa': (sa, err_sa)}
+    return {'size': (mean_pred_size, std_pred_size), 'u65': (u65, s65), 'u80': (u80, s80), 'u0': (u0, s0), 'sa': (sa, err_sa)}
 
 if __name__ == "__main__":
     np.random.seed(0)

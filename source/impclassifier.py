@@ -43,7 +43,7 @@ class DecompRecompImpreciseCART:
             for class_1 in range(self.K - 1):
                 for class_2 in range(class_1, self.K):
                     rec = recompose(self.decomps, self.K, alphas, betas, epsilons, class_1, class_2)
-                    if rec > 0:
+                    if rec != None and rec > 0:
                         Y_set_pred[i] = Y_set_pred[i] - {class_2}
         return Y_set_pred
     

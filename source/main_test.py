@@ -7,19 +7,19 @@ from impclassifier import DecompRecompImpreciseCART
 np.random.seed(0)
 
 # Parameters
-p = 2
+p = 3
 number_of_labels = 4
 shape_of_population = "ellipse"
-population_sizes = [50] * number_of_labels
+population_sizes = [30] * number_of_labels
 variability = "he"
-q = 0.75
+q = 0.80
 X, y, distributions = synthetic_datasets_generation(p, number_of_labels, shape_of_population, population_sizes, variability, q)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=1/3, random_state=0)
 # Affichage graphique des données multiclasse avec des points pour les données d'entraînement et des croix pour les données de test, de la même couleur ! pour chaque classe, légendé
 if p==2:
-    plot_2d_synthetic(X, y, distributions)
+    plot_2d_synthetic(X, y, distributions, title=f"{shape_of_population.capitalize()} {'heteroscedastic' if variability == 'he' else 'homoscedastic'}, q={q}", save_path=f"{shape_of_population}_{variability}_q{q}_{p}d.png")
 elif p==3:
-    plot_3d_synthetic(X, y, distributions)
+    plot_3d_synthetic(X, y, distributions, title=f"{shape_of_population.capitalize()} {'heteroscedastic' if variability == 'he' else 'homoscedastic'}, q={q}", save_path=f"{shape_of_population}_{variability}_q{q}_{p}d.png")
 
 # cl_ref = DecisionTreeClassifier()
 # cl_ref.fit(X_train, y_train)

@@ -42,30 +42,19 @@ def recompose(decomp, K, Alpha, Beta, epsilons, class1, class2):
 
 
 if __name__ == "__main__":
-    decomp = [({0}, {1}), ({0}, {2}), ({0}, {3}), ({1}, {2}), ({1}, {3}), ({2}, {3})]
-    alpha = [0.6,0.6,0,0.6,0.6,0.6]
-    beta = [1,1,0.4,1,1,1]
-    epsilons = unconditional_discounting(decomp, 4, alpha, beta)
+    decomp = [({0}, {1,2}), ({1}, {0,2}), ({2}, {0,1})]
+    alpha = [0.4, 0.5, 0]
+    beta =  [0.9, 0.7, 0.3]
+    epsilons = unconditional_discounting(decomp, 3, alpha, beta)
 
     for i in range(len(decomp)):
         print("Classifer {} vs {} : [{};{}] eps = {}".format(decomp[i][0], decomp[i][1], alpha[i], beta[i], epsilons[i]))
 
-    all_classes = set(range(4))
-    for class1 in range(4):
-        for class2 in range(4):
+    all_classes = set(range(3))
+    for class1 in range(3):
+        for class2 in range(3):
             if class1 != class2:
-                rec = recompose(decomp, 4, alpha, beta, epsilons, class1, class2)
-                print("Recomposition {} vs {} : {}".format(class1, class2, rec))
-                if rec > 0:
-                    print("Class {} is discarded".format(class2))
-                    all_classes = all_classes - {class2}
-    print("Remaining classes : {}".format(all_classes))
-
-    all_classes = set(range(4))
-    for class1 in range(4):
-        for class2 in range(4):
-            if class1 != class2:
-                rec = recompose(decomp, 4, alpha, beta, [0,0,1/3,0,0,0], class1, class2)
+                rec = recompose(decomp, 3, alpha, beta, epsilons, class1, class2)
                 print("Recomposition {} vs {} : {}".format(class1, class2, rec))
                 if rec > 0:
                     print("Class {} is discarded".format(class2))

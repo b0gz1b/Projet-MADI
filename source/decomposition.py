@@ -92,12 +92,15 @@ def ECOC_sparse(X,y):
     return classifiers, decomps
 
 def compute_hdi(alpha_prior, beta_prior, n, x, conf):
-    alpha_post = alpha_prior + x
-    beta_post = beta_prior + n - x
-    hdi = stats.beta.ppf([0.5*conf, 1-0.5*conf], alpha_post, beta_post)
-    return hdi
+    """
+    Compute the highest density interval for a beta distribution
+    """
+    a = alpha_prior + x/2
+    b = beta_prior + (n - x)/2
+    hdi = stats.beta.ppf([0.5*conf, 1 - 0.5*conf], a, b)
+    return np.array(hdi)
 
-def apply_imprecise(X, classifiers, conf=0.05):
+def apply_imprecise(X, classifiers, s=2):
     """
     Apply imprecise classification
     """
@@ -108,7 +111,8 @@ def apply_imprecise(X, classifiers, conf=0.05):
         for j in range(len(leaf_ids)):
             k = classifiers[i].tree_.value[leaf_ids[j], 0, max(0,int(y_hat[j]))]
             n = classifiers[i].tree_.value[0, 0, max(0,int(y_hat[j]))]
-            hdi = compute_hdi(3.5, 3.5, k, k, conf) # For now we give both times k for the posterior update
+            # hdi = np.array([k/(n+s), (k+s)/(n+s)])
+            hdi = compute_hdi(3.5, 3.5, n, k, 0.05)
             # si on a prédit la classe négative, on inverse l'intervalle de confiance
             hdis[j,i] = hdi if y_hat[j] == 1 else 1-hdi[::-1]
     return hdis

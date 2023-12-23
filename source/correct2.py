@@ -46,10 +46,10 @@ def unconditional_discounting(decomp, K, Alpha, Beta):
 
 
 if __name__ == "__main__":
-    decomp = [({0}, {1}), ({0}, {2}), ({0}, {3}), ({1}, {2}), ({1}, {3}), ({2}, {3})]
-    alpha = [0.6,0.6,0,0.6,0.6,0.6]
-    beta = [1,1,0.4,1,1,1]
-    epsilons = unconditional_discounting(decomp, 4, alpha, beta)
+    decomp = [({0}, {1,2}), ({1}, {0,2}), ({2}, {0,1})]
+    alpha = [0.4, 0.7, 0.1]
+    beta =  [0.9, 1, 0.3]
+    epsilons = unconditional_discounting(decomp, 3, alpha, beta)
 
     for i in range(len(decomp)):
         print("Classifer {} vs {} : [{};{}] eps = {}".format(decomp[i][0], decomp[i][1], alpha[i], beta[i], epsilons[i]))

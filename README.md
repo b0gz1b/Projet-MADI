@@ -48,6 +48,8 @@ To rerun the experiments, you can simply execute the experiment_digits.py file :
 python source/experiment_digits.py
 ```
 
+The seed is fixed at the beginning of the file to ensure reproducibility of the results (see comment to pick the right seed). Instructions are given in the file to choose the dataset and the decomposition scheme. The results are saved in the out folder.
+
 ## Todo
 
 - [x] Génération de jeux de données synthétiques représentable graphiquement;
@@ -66,15 +68,7 @@ python source/experiment_digits.py
 
 - [x] Expérimentations sur les jeux de données réels;
 
-- [ ] Rapport :
-  
-  - [ ] Une présentation formelle synthétique du classifieur et de ses idées principales;
-  
-  - [ ] Une illustration de la mise en oeuvre du classifieur sur des jeux de données synthétiques;
-
-  - [ ] Analyse des résultats expérimentaux sur les jeux de données retenus;
-  
-  - [ ] Analyse de la pertinence de la classification prudente par rapport aux type de données.
+- [x] Rapport.
 
 ## References
 
